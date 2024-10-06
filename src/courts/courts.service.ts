@@ -1,26 +1,40 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourtDto } from './dto/create-court.dto';
 import { UpdateCourtDto } from './dto/update-court.dto';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class CourtsService {
+  constructor(private prismaService: PrismaService) {}
+
   create(createCourtDto: CreateCourtDto) {
-    return 'This action adds a new court';
+    return this.prismaService.court.create({ data: createCourtDto });
   }
 
   findAll() {
-    return `This action returns all courts`;
+    return this.prismaService.court.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} court`;
+  async findOne(id: number) {
+    const courtFound = await this.prismaService.court.findUnique({
+      where: { id },
+    });
+    if (!courtFound) throw new NotFoundException(`Court #${id} not found`);
+    return courtFound;
   }
 
-  update(id: number, updateCourtDto: UpdateCourtDto) {
-    return `This action updates a #${id} court`;
+  async update(id: number, updateCourtDto: UpdateCourtDto) {
+    const updatedCourt = await this.prismaService.court.update({
+      where: { id },
+      data: updateCourtDto,
+    });
+    if (!updatedCourt) throw new NotFoundException(`Court #${id} not found`);
+    return updatedCourt;
   }
 
   remove(id: number) {
-    return `This action removes a #${id} court`;
+    const deletedCourt = this.prismaService.court.delete({ where: { id } });
+    if (!deletedCourt) throw new NotFoundException(`Court #${id} not found`);
+    return deletedCourt;
   }
 }
